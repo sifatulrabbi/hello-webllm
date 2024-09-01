@@ -20,8 +20,12 @@ const modelId = "TinyLlama-1.1B-Chat-v0.4-q4f32_1-MLC-1k";
 const loadEngineProgressKey = "hello-webllm.locals.loading-engine";
 const messagesRepoKey = "hello-webllm.locals.messages-repo";
 
+sessionStorage.removeItem(loadEngineProgressKey);
+
 const App: FC = () => {
   const [engine, setEngine] = useState<webllm.MLCEngine | null>(null);
+  const [engineLoadingProgress, setEngineLoadingProgress] =
+    useState("Preparing 0%");
   const [msgInput, setMsgInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [processingMsg, setProcessingMsg] = useState(false);
@@ -35,7 +39,10 @@ const App: FC = () => {
     sessionStorage.setItem(loadEngineProgressKey, "true");
     webllm
       .CreateMLCEngine(modelId, {
-        initProgressCallback: (report) => {},
+        initProgressCallback: (report) => {
+          setEngineLoadingProgress(`${report.text}`);
+          // console.log(report);
+        },
       })
       .then((e) => {
         setEngine(e);
@@ -124,11 +131,19 @@ const App: FC = () => {
   }
 
   if (!engine) {
-    return <div className="p-6">Loading the model...</div>;
+    return (
+      <div className="p-6 w-full flex flex-col items-center justify-center gap-4 max-w-xl mx-auto">
+        <h3 className="font-bold text-xl">Downloading model</h3>
+        <p className="w-full bg-slate-200 text-slate-700 text-sm p-4 rounded font-mono">
+          {engineLoadingProgress}
+        </p>
+        <span className="font-bold animate-pulse">Please wait...</span>
+      </div>
+    );
   }
 
   return (
-    <main className="w-full flex flex-col p-6 h-screen max-h-screen overflow-hidden gap-y-4 text-slate-600">
+    <main className="w-full max-w-2xl mx-auto flex flex-col p-6 h-screen max-h-screen overflow-hidden gap-y-4 text-slate-600">
       <h3 className="font-bold text-xl">Web LLM</h3>
 
       <div
