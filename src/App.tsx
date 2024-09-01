@@ -16,9 +16,16 @@ type Message = {
   sentAt: string;
 };
 
+// const modelId = "Llama-3.1-8B-Instruct-q4f32_1-MLC-1k";
 const modelId = "TinyLlama-1.1B-Chat-v0.4-q4f32_1-MLC-1k";
 const loadEngineProgressKey = "hello-webllm.locals.loading-engine";
 const messagesRepoKey = "hello-webllm.locals.messages-repo";
+
+// console.log(
+//   webllm.prebuiltAppConfig.model_list.filter((m) =>
+//     m.model_id.includes("Llama"),
+//   ),
+// );
 
 sessionStorage.removeItem(loadEngineProgressKey);
 
