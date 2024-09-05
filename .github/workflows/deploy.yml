@@ -1,0 +1,39 @@
+name: Deploy to server
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  VERSION: 0.1.0
+
+jobs:
+  deploy-on-hosting-server:
+    name: Deploy on hosting server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node v22
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build React app
+        run: yarn build
+
+      - name: Deploy on hosting server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.HOST }}
+          port: 22
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          username: root
+          source: dist
+          target: /var/www/hello-webllm
+          overwrite: true
