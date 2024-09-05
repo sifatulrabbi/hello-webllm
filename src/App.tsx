@@ -72,7 +72,10 @@ const App: FC = () => {
       try {
         const parsedMsgs = JSON.parse(msgs || "[]") as Message[];
         setMessages(parsedMsgs);
-        if (parsedMsgs.length > 0 && parsedMsgs.at(-1)?.role === "user") {
+        if (
+          parsedMsgs.length > 0 &&
+          parsedMsgs[parsedMsgs.length - 1]?.role === "user"
+        ) {
           processMsg(parsedMsgs).then();
         }
       } catch {
