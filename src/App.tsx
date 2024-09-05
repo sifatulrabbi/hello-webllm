@@ -8,7 +8,7 @@ import {
 import { v4 } from "uuid";
 import * as webllm from "@mlc-ai/web-llm";
 import { marked } from "marked";
-import { FaInfoCircle, FaRobot } from "react-icons/fa";
+import { FaExclamationTriangle, FaInfoCircle, FaRobot } from "react-icons/fa";
 
 type Message = {
   id: string;
@@ -35,14 +35,17 @@ sessionStorage.removeItem(loadEngineProgressKey);
 const App: FC = () => {
   const [engine, setEngine] = useState<webllm.MLCEngine | null>(null);
   const [engineLoadingProgress, setEngineLoadingProgress] = useState("");
+  const [engineLoadingErr, setEngineLoadingErr] = useState("");
   const [msgInput, setMsgInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [processingMsg, setProcessingMsg] = useState(false);
   const messagesContainer = useRef<HTMLDivElement>(null);
 
-  // useEffect(() => {
-  //   prepareEngine();
-  // }, []);
+  useEffect(() => {
+    if (localStorage.getItem(loadEngineProgressKey) === "true") {
+      prepareEngine();
+    }
+  }, []);
 
   useEffect(() => {
     if (messages.length < 1) return;
@@ -50,12 +53,9 @@ const App: FC = () => {
   }, [messages]);
 
   async function prepareEngine() {
-    // const loadingStatus = sessionStorage.getItem(loadEngineProgressKey);
-    // if (loadingStatus === "true") return;
-    // sessionStorage.setItem(loadEngineProgressKey, "true");
-
     try {
       setEngineLoadingProgress("Sarting the download...");
+      setEngineLoadingErr("");
       const e = await webllm.CreateMLCEngine(modelId, {
         initProgressCallback: (report) => {
           setEngineLoadingProgress(`${report.text}`);
@@ -64,10 +64,14 @@ const App: FC = () => {
       });
       setEngine(e);
       setEngineLoadingProgress("");
+      localStorage.setItem(loadEngineProgressKey, "true");
     } catch (err) {
-      console.error("unable to fully load the model:", err);
+      const errMsg = "Unable to fully load the model: " + String(err);
+      setEngineLoadingErr(errMsg);
+      setEngineLoadingProgress("");
+      setEngine(null);
+      console.error(errMsg);
     } finally {
-      sessionStorage.removeItem(loadEngineProgressKey);
       const msgs = localStorage.getItem(messagesRepoKey);
       try {
         const parsedMsgs = JSON.parse(msgs || "[]") as Message[];
@@ -89,7 +93,7 @@ const App: FC = () => {
   async function clearStorage() {
     await webllm.deleteModelAllInfoInCache(modelId);
     localStorage.removeItem(messagesRepoKey);
-    sessionStorage.removeItem(loadEngineProgressKey);
+    localStorage.removeItem(loadEngineProgressKey);
     setEngineLoadingProgress("");
     setMessages([]);
     setProcessingMsg(false);
@@ -123,7 +127,9 @@ const App: FC = () => {
         },
       ]);
     } catch (err) {
-      console.error("unable to process message:", err);
+      const errMsg = "Unable to process message: " + String(err);
+      console.error(errMsg);
+      setEngineLoadingErr(errMsg);
     } finally {
       setProcessingMsg(false);
       scrollDown();
@@ -162,6 +168,12 @@ const App: FC = () => {
         <h3 className="font-bold text-xl">
           {engineLoadingProgress ? "Downloading model" : "Prepare the model"}
         </h3>
+        {engineLoadingErr && (
+          <p className="w-full bg-red-100 text-red-600 text-sm p-4 rounded font-mono">
+            <FaExclamationTriangle className="inline text-red-600 mr-2 -mt-[2px]" />
+            {engineLoadingErr}
+          </p>
+        )}
         {engineLoadingProgress ? (
           <>
             <p className="w-full bg-slate-200 text-slate-700 text-sm p-4 rounded font-mono">
@@ -212,6 +224,13 @@ const App: FC = () => {
         className={`w-full flex flex-col items-start justify-start gap-y-4 h-full max-h-full overflow-y-auto px-6 py-4`}
       >
         <div className="flex flex-col gap-y-2 pb-4 border-b border-slate-100">
+          {engineLoadingErr && (
+            <p className="w-full bg-red-100 text-red-600 text-sm p-4 rounded font-mono">
+              <FaExclamationTriangle className="inline text-red-600 mr-2 -mt-[2px]" />
+              {engineLoadingErr}
+            </p>
+          )}
+
           <div className="rounded p-4 bg-blue-50 w-full text-sm text-slate-400">
             <div className="content-display">
               <FaInfoCircle className="inline text-blue-400 mr-1 w-4 h-4" />
