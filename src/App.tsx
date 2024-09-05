@@ -50,12 +50,12 @@ const App: FC = () => {
   }, [messages]);
 
   async function prepareEngine() {
-    const loadingStatus = sessionStorage.getItem(loadEngineProgressKey);
+    // const loadingStatus = sessionStorage.getItem(loadEngineProgressKey);
+    // if (loadingStatus === "true") return;
+    // sessionStorage.setItem(loadEngineProgressKey, "true");
 
-    if (loadingStatus === "true") return;
-
-    sessionStorage.setItem(loadEngineProgressKey, "true");
     try {
+      setEngineLoadingProgress("Sarting the download...");
       const e = await webllm.CreateMLCEngine(modelId, {
         initProgressCallback: (report) => {
           setEngineLoadingProgress(`${report.text}`);
